@@ -8,7 +8,7 @@ namespace TagsQuery
 
         public Query(string queryString)
         {
-            Tokenize(GetTokensStrings(queryString));
+            token = Tokenize(GetTokensStrings(queryString));
         }
 
         public bool Validate(string str)
@@ -17,7 +17,7 @@ namespace TagsQuery
             return answer;
         }
 
-        private List<string> GetTokensStrings(string str)
+        public List<string> GetTokensStrings(string str)
         {
             List<string> tokensStrings = new List<string>();
 
@@ -26,47 +26,51 @@ namespace TagsQuery
 
             for (int i = 0; i < str.Length; i++)
             {
-                switch (str[i])
+                if (isTokenStart)
                 {
-                    case '\"':
-                        if (isTokenStart)
-                        {
-                            currentToken += str[i];
-                            tokensStrings.Add(currentToken);
-                            isTokenStart = false;
-                            currentToken = "";
-                        }
-                        else
-                        {
+                    if (str[i] == '\"')
+                    {
+                        currentToken += str[i];
+                        tokensStrings.Add(currentToken);
+                        isTokenStart = false;
+                        currentToken = "";
+                    }
+                    else
+                    {
+                        currentToken += str[i];
+                    }
+                }
+                else
+                {
+                    switch (str[i])
+                    {
+                        case '\"':
                             isTokenStart = true;
                             currentToken += str[i];
-                        }
-                        break;
-                    case '-':
-                        if (!isTokenStart)
-                        {
-                            tokensStrings.Add("-");
-                        }
-                        break;
-                    case '&':
-                        if (!isTokenStart)
-                        {
+                            break;
+                        case '&':
                             tokensStrings.Add("&");
-                        }
-                        break;
-                    default:
-                        if (isTokenStart)
-                        {
-                            currentToken += str[i];
-                        }
-                        break;
+                            break;
+                        case '|':
+                            tokensStrings.Add("|");
+                            break;
+                        case '-':
+                            tokensStrings.Add("-");
+                            break;
+                        case '(':
+                            tokensStrings.Add("(");
+                            break;
+                        case ')':
+                            tokensStrings.Add(")");
+                            break;
+                    }
                 }
             }
 
             return tokensStrings;
         }
 
-        private void Tokenize(List<string> tokenStrings)
+        private IToken Tokenize(List<string> tokenStrings)
         {
             Dictionary<int, IToken> dict = new Dictionary<int, IToken>();
             int[] ids = new int[tokenStrings.Count];
@@ -75,38 +79,11 @@ namespace TagsQuery
 
             do
             {
-                for (int i = 0; i < tokenStrings.Count; i++)
-                {
-                    if (tokenStrings[i] != "-" && tokenStrings[i] != "&" && ids[i] == 0)
-                    {
-                        dict.Add(currentId, new Token(tokenStrings[i], true));
-                        ids[i] = currentId;
-                        currentId++;
-                    }
-                }
-
-                for (int i = 0; i < tokenStrings.Count; i++)
-                {
-                    if (tokenStrings[i] == "-" && ids[i + 1] > 0 && ids[i] == 0)
-                    {
-                        dict.Add(currentId, new Token(tokenStrings[i + 1], false));
-                        ids[i] = currentId;
-                        ids[i + 1] = currentId;
-                        currentId++;
-                    }
-                }
-
-                for (int i = 0; i < tokenStrings.Count; i++)
-                {
-                    if (tokenStrings[i] == "&" && ids[i - 1] > 0 && ids[i + 1] > 0 && ids[i] == 0)
-                    {
-                        dict.Add(currentId, new OperatorAnd(dict[ids[i - 1]], dict[ids[i + 1]], true));
-                        ids[i] = currentId;
-                        ids[i - 1] = currentId;
-                        ids[i + 1] = currentId;
-                        currentId++;
-                    }
-                }
+                currentId = FindSimpleTokens(tokenStrings, dict, ids, currentId);
+                currentId = FindUnderTokens(tokenStrings, dict, ids, currentId);
+                currentId = FindOperatorsNot(tokenStrings, dict, ids, currentId);
+                currentId = FindOperatorsAnd(tokenStrings, dict, ids, currentId);
+                currentId = FindOperatorsOr(tokenStrings, dict, ids, currentId);
 
                 count = 0;
                 for (int i = 0; i < ids.Length; i++)
@@ -118,7 +95,121 @@ namespace TagsQuery
                 }
             } while (count > 0);
 
-            token = dict[currentId - 1];
+            return dict[currentId - 1];
+        }
+
+        private int FindSimpleTokens(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        {
+            for (int i = 0; i < tokenStrings.Count; i++)
+            {
+                if (tokenStrings[i] != "-" &&
+                    tokenStrings[i] != "&" &&
+                    tokenStrings[i] != "|" &&
+                    tokenStrings[i] != "(" &&
+                    tokenStrings[i] != ")" &&
+                    ids[i] == 0)
+                {
+                    dict.Add(currentId, new Token(tokenStrings[i]));
+                    ids[i] = currentId;
+                    currentId++;
+                }
+            }
+
+            return currentId;
+        }
+
+        private int FindUnderTokens(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        {
+            for (int i = 0; i < tokenStrings.Count; i++)
+            {
+                if (tokenStrings[i] == "(" && ids[i] == 0)
+                {
+                    int start = i, end = i + 1;
+                    List<string> underToken = new List<string>();
+
+                    int nest = 0;
+
+                    for (int j = i + 1; j < tokenStrings.Count; j++)
+                    {
+                        if (tokenStrings[j] == "(")
+                        {
+                            nest++;
+                        }
+                        if (tokenStrings[j] == ")")
+                        {
+                            if (nest > 0)
+                            {
+                                nest--;
+                            }
+                            else
+                            {
+                                end = j;
+                                break;
+                            }
+                        }
+                        underToken.Add(tokenStrings[j]);
+                    }
+
+                    dict.Add(currentId, Tokenize(underToken));
+                    for (int j = start; j <= end; j++)
+                    {
+                        ids[j] = currentId;
+                    }
+                    currentId++;
+                }
+            }
+
+            return currentId;
+        }
+
+        private int FindOperatorsNot(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        {
+            for (int i = 0; i < tokenStrings.Count; i++)
+            {
+                if (tokenStrings[i] == "-" && ids[i + 1] > 0 && ids[i] == 0)
+                {
+                    dict.Add(currentId, new OperatorNot(dict[ids[i + 1]]));
+                    ids[i] = currentId;
+                    ids[i + 1] = currentId;
+                    currentId++;
+                }
+            }
+
+            return currentId;
+        }
+
+        private int FindOperatorsAnd(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        {
+            for (int i = 0; i < tokenStrings.Count; i++)
+            {
+                if (tokenStrings[i] == "&" && ids[i - 1] > 0 && ids[i + 1] > 0 && ids[i] == 0)
+                {
+                    dict.Add(currentId, new OperatorAnd(dict[ids[i - 1]], dict[ids[i + 1]]));
+                    ids[i] = currentId;
+                    ids[i - 1] = currentId;
+                    ids[i + 1] = currentId;
+                    currentId++;
+                }
+            }
+
+            return currentId;
+        }
+
+        private int FindOperatorsOr(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        {
+            for (int i = 0; i < tokenStrings.Count; i++)
+            {
+                if (tokenStrings[i] == "|" && ids[i - 1] > 0 && ids[i + 1] > 0 && ids[i] == 0)
+                {
+                    dict.Add(currentId, new OperatorOr(dict[ids[i - 1]], dict[ids[i + 1]]));
+                    ids[i] = currentId;
+                    ids[i - 1] = currentId;
+                    ids[i + 1] = currentId;
+                    currentId++;
+                }
+            }
+
+            return currentId;
         }
     }
 }

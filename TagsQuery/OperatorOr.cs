@@ -2,12 +2,12 @@
 
 namespace TagsQuery
 {
-    internal class OperatorAnd : IToken
+    internal class OperatorOr : IToken
     {
         private IToken token1;
         private IToken token2;
 
-        internal OperatorAnd(IToken token1, IToken token2)
+        internal OperatorOr(IToken token1, IToken token2)
         {
             this.token1 = token1;
             this.token2 = token2;
@@ -15,8 +15,7 @@ namespace TagsQuery
 
         public bool Validate(List<string> tokenStrings)
         {
-            bool answer = token1.Validate(tokenStrings) && token2.Validate(tokenStrings);
-            return answer;
+            return token1.Validate(tokenStrings) || token2.Validate(tokenStrings);
         }
     }
 }

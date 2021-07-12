@@ -5,23 +5,21 @@ namespace TagsQuery
     internal class Token : IToken
     {
         private string tokenString;
-        private bool boolean;
 
-        internal Token(string tokenString, bool boolean)
+        internal Token(string tokenString)
         {
             this.tokenString = tokenString;
-            this.boolean = boolean;
         }
 
         public bool Validate(List<string> tokenStrings)
         {
             bool answer = tokenStrings.Contains(tokenString);
-            return answer == boolean;
+            return answer;
         }
 
         public static bool operator ==(Token token1, Token token2)
         {
-            return token1.tokenString == token2.tokenString && token1.boolean == token2.boolean;
+            return token1.tokenString == token2.tokenString;
         }
 
         public static bool operator !=(Token token1, Token token2)
@@ -31,7 +29,7 @@ namespace TagsQuery
 
         public override bool Equals(object obj)
         {
-            return tokenString == ((Token)obj).tokenString && boolean == ((Token)obj).boolean;
+            return tokenString == ((Token)obj).tokenString;
         }
     }
 }
