@@ -17,7 +17,7 @@ namespace TagsQuery
             return answer;
         }
 
-        public List<string> GetTokensStrings(string str)
+        public static List<string> GetTokensStrings(string str)
         {
             List<string> tokensStrings = new List<string>();
 
@@ -70,7 +70,7 @@ namespace TagsQuery
             return tokensStrings;
         }
 
-        private IToken Tokenize(List<string> tokenStrings)
+        private static IToken Tokenize(List<string> tokenStrings)
         {
             Dictionary<int, IToken> dict = new Dictionary<int, IToken>();
             int[] ids = new int[tokenStrings.Count];
@@ -98,7 +98,7 @@ namespace TagsQuery
             return dict[currentId - 1];
         }
 
-        private int FindSimpleTokens(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        private static int FindSimpleTokens(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
         {
             for (int i = 0; i < tokenStrings.Count; i++)
             {
@@ -118,7 +118,7 @@ namespace TagsQuery
             return currentId;
         }
 
-        private int FindUnderTokens(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        private static int FindUnderTokens(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
         {
             for (int i = 0; i < tokenStrings.Count; i++)
             {
@@ -162,7 +162,7 @@ namespace TagsQuery
             return currentId;
         }
 
-        private int FindOperatorsNot(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        private static int FindOperatorsNot(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
         {
             for (int i = 0; i < tokenStrings.Count; i++)
             {
@@ -178,7 +178,7 @@ namespace TagsQuery
             return currentId;
         }
 
-        private int FindOperatorsAnd(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        private static int FindOperatorsAnd(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
         {
             for (int i = 0; i < tokenStrings.Count; i++)
             {
@@ -195,7 +195,7 @@ namespace TagsQuery
             return currentId;
         }
 
-        private int FindOperatorsOr(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        private static int FindOperatorsOr(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
         {
             for (int i = 0; i < tokenStrings.Count; i++)
             {
