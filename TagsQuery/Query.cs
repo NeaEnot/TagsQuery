@@ -13,7 +13,7 @@ namespace TagsQuery
 
         public bool Validate(string str)
         {
-            bool answer = token.Validate(GetTokensStrings(str));
+            bool answer = token != null ? token.Validate(GetTokensStrings(str)) : true;
             return answer;
         }
 
@@ -72,6 +72,11 @@ namespace TagsQuery
 
         private static IToken Tokenize(List<string> tokenStrings)
         {
+            if (tokenStrings.Count == 0)
+            {
+                return null;
+            }
+
             Dictionary<int, IToken> dict = new Dictionary<int, IToken>();
             int[] ids = new int[tokenStrings.Count];
             int currentId = 1;
