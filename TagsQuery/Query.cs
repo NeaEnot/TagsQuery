@@ -175,7 +175,16 @@ namespace TagsQuery
                 {
                     dict.Add(currentId, new OperatorNot(dict[ids[i + 1]]));
                     ids[i] = currentId;
-                    ids[i + 1] = currentId;
+
+                    int oldId = ids[i + 1];
+                    for (int j = 0; j < ids.Length; j++)
+                    {
+                        if (ids[j] == oldId)
+                        {
+                            ids[j] = currentId;
+                        }
+                    }
+
                     currentId++;
                 }
             }
@@ -191,8 +200,21 @@ namespace TagsQuery
                 {
                     dict.Add(currentId, new OperatorAnd(dict[ids[i - 1]], dict[ids[i + 1]]));
                     ids[i] = currentId;
-                    ids[i - 1] = currentId;
-                    ids[i + 1] = currentId;
+
+                    int oldIdLeft = ids[i - 1];
+                    int oldIdRight = ids[i + 1];
+                    for (int j = 0; j < ids.Length; j++)
+                    {
+                        if (ids[j] == oldIdLeft)
+                        {
+                            ids[j] = currentId;
+                        }
+                        if (ids[j] == oldIdRight)
+                        {
+                            ids[j] = currentId;
+                        }
+                    }
+
                     currentId++;
                 }
             }
@@ -208,8 +230,21 @@ namespace TagsQuery
                 {
                     dict.Add(currentId, new OperatorOr(dict[ids[i - 1]], dict[ids[i + 1]]));
                     ids[i] = currentId;
-                    ids[i - 1] = currentId;
-                    ids[i + 1] = currentId;
+
+                    int oldIdLeft = ids[i - 1];
+                    int oldIdRight = ids[i + 1];
+                    for (int j = 0; j < ids.Length; j++)
+                    {
+                        if (ids[j] == oldIdLeft)
+                        {
+                            ids[j] = currentId;
+                        }
+                        if (ids[j] == oldIdRight)
+                        {
+                            ids[j] = currentId;
+                        }
+                    }
+
                     currentId++;
                 }
             }
