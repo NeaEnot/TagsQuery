@@ -91,5 +91,14 @@ namespace Test
             Assert.False(query.Validate("\"tag2\" \"tag3\""));
             Assert.False(query.Validate("\"tag1\" \"tag-\""));
         }
+
+        [Fact]
+        public void TestLikeToken()
+        {
+            Query query = new Query("\'tag\'");
+            Assert.True(query.Validate("\"tag\""));
+            Assert.True(query.Validate("\"not tag\""));
+            Assert.False(query.Validate("\"task\""));
+        }
     }
 }

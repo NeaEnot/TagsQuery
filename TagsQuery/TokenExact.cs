@@ -2,11 +2,11 @@
 
 namespace TagsQuery
 {
-    internal class Token : IToken
+    internal class TokenExact : IToken
     {
         private string tokenString;
 
-        internal Token(string tokenString)
+        internal TokenExact(string tokenString)
         {
             this.tokenString = tokenString;
         }
@@ -17,19 +17,19 @@ namespace TagsQuery
             return answer;
         }
 
-        public static bool operator ==(Token token1, Token token2)
+        public static bool operator ==(TokenExact token1, TokenExact token2)
         {
             return token1.tokenString == token2.tokenString;
         }
 
-        public static bool operator !=(Token token1, Token token2)
+        public static bool operator !=(TokenExact token1, TokenExact token2)
         {
             return token1 == token2;
         }
 
         public override bool Equals(object obj)
         {
-            return tokenString == ((Token)obj).tokenString;
+            return tokenString == ((TokenExact)obj).tokenString;
         }
     }
 }

@@ -21,18 +21,32 @@ namespace TagsQuery
         {
             List<string> tokensStrings = new List<string>();
 
-            bool isTokenStart = false;
+            int tokenStart = 0;
             string currentToken = "";
 
             for (int i = 0; i < str.Length; i++)
             {
-                if (isTokenStart)
+                if (tokenStart == 1)
                 {
                     if (str[i] == '\"')
                     {
                         currentToken += str[i];
                         tokensStrings.Add(currentToken);
-                        isTokenStart = false;
+                        tokenStart = 0;
+                        currentToken = "";
+                    }
+                    else
+                    {
+                        currentToken += str[i];
+                    }
+                }
+                else if (tokenStart == 2)
+                {
+                    if (str[i] == '\'')
+                    {
+                        currentToken += str[i];
+                        tokensStrings.Add(currentToken);
+                        tokenStart = 0;
                         currentToken = "";
                     }
                     else
@@ -45,7 +59,11 @@ namespace TagsQuery
                     switch (str[i])
                     {
                         case '\"':
-                            isTokenStart = true;
+                            tokenStart = 1;
+                            currentToken += str[i];
+                            break;
+                        case '\'':
+                            tokenStart = 2;
                             currentToken += str[i];
                             break;
                         case '&':
@@ -84,7 +102,8 @@ namespace TagsQuery
 
             do
             {
-                currentId = FindSimpleTokens(tokenStrings, dict, ids, currentId);
+                currentId = FindExactTokens(tokenStrings, dict, ids, currentId);
+                currentId = FindLikeTokens(tokenStrings, dict, ids, currentId);
                 currentId = FindUnderTokens(tokenStrings, dict, ids, currentId);
                 currentId = FindOperatorsNot(tokenStrings, dict, ids, currentId);
                 currentId = FindOperatorsAnd(tokenStrings, dict, ids, currentId);
@@ -103,7 +122,7 @@ namespace TagsQuery
             return dict[currentId - 1];
         }
 
-        private static int FindSimpleTokens(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        private static int FindExactTokens(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
         {
             for (int i = 0; i < tokenStrings.Count; i++)
             {
@@ -112,9 +131,31 @@ namespace TagsQuery
                     tokenStrings[i] != "|" &&
                     tokenStrings[i] != "(" &&
                     tokenStrings[i] != ")" &&
+                    tokenStrings[i][0] == '\"' && tokenStrings[i][tokenStrings[i].Length - 1] == '\"' &&
                     ids[i] == 0)
                 {
-                    dict.Add(currentId, new Token(tokenStrings[i]));
+                    dict.Add(currentId, new TokenExact(tokenStrings[i]));
+                    ids[i] = currentId;
+                    currentId++;
+                }
+            }
+
+            return currentId;
+        }
+
+        private static int FindLikeTokens(List<string> tokenStrings, Dictionary<int, IToken> dict, int[] ids, int currentId)
+        {
+            for (int i = 0; i < tokenStrings.Count; i++)
+            {
+                if (tokenStrings[i] != "-" &&
+                    tokenStrings[i] != "&" &&
+                    tokenStrings[i] != "|" &&
+                    tokenStrings[i] != "(" &&
+                    tokenStrings[i] != ")" &&
+                    tokenStrings[i][0] == '\'' && tokenStrings[i][tokenStrings[i].Length - 1] == '\'' &&
+                    ids[i] == 0)
+                {
+                    dict.Add(currentId, new TokenLike(tokenStrings[i]));
                     ids[i] = currentId;
                     currentId++;
                 }
