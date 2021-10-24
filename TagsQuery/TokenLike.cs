@@ -25,7 +25,7 @@ namespace TagsQuery
 
         public static bool operator !=(TokenLike token1, TokenLike token2)
         {
-            return token1 == token2;
+            return token1 != token2;
         }
 
         public override bool Equals(object obj)
